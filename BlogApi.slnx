@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BlogApi.Api/BlogApi.Api.csproj" />
+    <Project Path="src/BlogApi.Application/BlogApi.Application.csproj" />
+    <Project Path="src/BlogApi.Domain/BlogApi.Domain.csproj" />
+    <Project Path="src/BlogApi.Infrastructure/BlogApi.Infrastructure.csproj" />
+    <Project Path="src/BlogApi.ServiceDefaults/BlogApi.ServiceDefaults.csproj" />
+    <Project Path="src/BlogApi.AppHost/BlogApi.AppHost.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "BlogApi.AppHost.csproj"
+  }
+}

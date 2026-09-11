@@ -1,0 +1,69 @@
+using BlogApi.Application.Dtos;
+using BlogApi.Application.Interfaces;
+using BlogApi.Domain.Entities;
+
+namespace BlogApi.Application.Services;
+
+public class PostService(IPostRepository postRepository) : IPostService
+{
+    public IReadOnlyList<PostDto> GetPublishedPosts() =>
+        postRepository.GetPublished().Select(ToDto).ToList();
+
+    public IReadOnlyList<PostDto> GetAllPosts() =>
+        postRepository.GetAll().Select(ToDto).ToList();
+
+    public PostDto? GetPostById(Guid id) =>
+        postRepository.GetById(id) is { } post ? ToDto(post) : null;
+
+    public PostDto CreatePost(CreatePostRequest request)
+    {
+        var post = new Post
+        {
+            Id = Guid.NewGuid(),
+            Title = request.Title,
+            Content = request.Content,
+            Author = request.Author,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        postRepository.Add(post);
+        return ToDto(post);
+    }
+
+    public PostDto? UpdatePost(Guid id, UpdatePostRequest request)
+    {
+        var post = postRepository.GetById(id);
+        if (post is null)
+        {
+            return null;
+        }
+
+        post.Title = request.Title;
+        post.Content = request.Content;
+        post.UpdatedAt = DateTime.UtcNow;
+
+        postRepository.Update(post);
+        return ToDto(post);
+    }
+
+    public bool DeletePost(Guid id) => postRepository.Delete(id);
+
+    public PostDto? SetPublished(Guid id, bool isPublished)
+    {
+        var post = postRepository.GetById(id);
+        if (post is null)
+        {
+            return null;
+        }
+
+        post.IsPublished = isPublished;
+        post.PublishedAt = isPublished ? DateTime.UtcNow : null;
+        post.UpdatedAt = DateTime.UtcNow;
+
+        postRepository.Update(post);
+        return ToDto(post);
+    }
+
+    private static PostDto ToDto(Post post) =>
+        new(post.Id, post.Title, post.Content, post.Author, post.CreatedAt, post.UpdatedAt, post.IsPublished, post.PublishedAt);
+}
