@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Blog.Api/Blog.Api.csproj" />
+    <Project Path="src/Blog.AppHost/Blog.AppHost.csproj" />
+    <Project Path="src/Blog.Application/Blog.Application.csproj" />
+    <Project Path="src/Blog.Domain/Blog.Domain.csproj" />
+    <Project Path="src/Blog.Infrastructure/Blog.Infrastructure.csproj" />
+    <Project Path="src/Blog.ServiceDefaults/Blog.ServiceDefaults.csproj" />
+  </Folder>
+</Solution>
