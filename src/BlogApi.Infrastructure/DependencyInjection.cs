@@ -16,6 +16,8 @@ public static class DependencyInjection
         builder.Services.AddDbContext<BlogDbContext>(options =>
             options.UseSqlite(builder.Configuration.GetSection("ConnectionStrings")["sqlite"]!));
 
+        builder.Services.AddScoped<IUserRepository, SqliteUserRepository>();
+        builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IPostRepository, SqlitePostRepository>();
         builder.Services.AddScoped<IPostService, PostService>();
 

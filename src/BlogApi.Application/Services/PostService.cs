@@ -12,17 +12,21 @@ public class PostService(IPostRepository postRepository) : IPostService
     public IReadOnlyList<PostDto> GetAllPosts() =>
         postRepository.GetAll().Select(ToDto).ToList();
 
+    public IReadOnlyList<PostDto> GetPostsByAuthor(Guid authorId) =>
+        postRepository.GetByAuthor(authorId).Select(ToDto).ToList();
+
     public PostDto? GetPostById(Guid id) =>
         postRepository.GetById(id) is { } post ? ToDto(post) : null;
 
-    public PostDto CreatePost(CreatePostRequest request)
+    public PostDto CreatePost(CreatePostRequest request, Guid authorId, string authorUsername)
     {
         var post = new Post
         {
             Id = Guid.NewGuid(),
             Title = request.Title,
             Content = request.Content,
-            Author = request.Author,
+            Author = authorUsername,
+            AuthorId = authorId,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -65,5 +69,5 @@ public class PostService(IPostRepository postRepository) : IPostService
     }
 
     private static PostDto ToDto(Post post) =>
-        new(post.Id, post.Title, post.Content, post.Author, post.CreatedAt, post.UpdatedAt, post.IsPublished, post.PublishedAt);
+        new(post.Id, post.Title, post.Content, post.Author, post.AuthorId, post.CreatedAt, post.UpdatedAt, post.IsPublished, post.PublishedAt);
 }

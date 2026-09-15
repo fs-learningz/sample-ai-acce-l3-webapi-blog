@@ -6,17 +6,20 @@ using Microsoft.Data.Sqlite;
 
 namespace BlogApi.Infrastructure.Persistence;
 
-public class SqlitePostRepository(SqliteConnection connection) : IPostRepository
+public class SqlitePostRepository(SqliteConnection connection, IUserRepository userRepository) : IPostRepository
 {
     private bool _initialized;
+
+    private const string SelectColumns =
+        "id, title, content, author, author_id, created_at, updated_at, is_published, published_at";
 
     public IReadOnlyList<Post> GetAll()
     {
         EnsureInitialized();
 
         using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT id, title, content, author, created_at, updated_at, is_published, published_at
+        command.CommandText = $"""
+            SELECT {SelectColumns}
             FROM posts
             ORDER BY created_at DESC
             """;
@@ -36,12 +39,35 @@ public class SqlitePostRepository(SqliteConnection connection) : IPostRepository
         EnsureInitialized();
 
         using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT id, title, content, author, created_at, updated_at, is_published, published_at
+        command.CommandText = $"""
+            SELECT {SelectColumns}
             FROM posts
             WHERE is_published = 1
             ORDER BY created_at DESC
             """;
+
+        var posts = new List<Post>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            posts.Add(MapPost(reader));
+        }
+
+        return posts;
+    }
+
+    public IReadOnlyList<Post> GetByAuthor(Guid authorId)
+    {
+        EnsureInitialized();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = $"""
+            SELECT {SelectColumns}
+            FROM posts
+            WHERE author_id = @authorId
+            ORDER BY created_at DESC
+            """;
+        command.Parameters.AddWithValue("@authorId", authorId.ToString());
 
         var posts = new List<Post>();
         using var reader = command.ExecuteReader();
@@ -58,8 +84,8 @@ public class SqlitePostRepository(SqliteConnection connection) : IPostRepository
         EnsureInitialized();
 
         using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT id, title, content, author, created_at, updated_at, is_published, published_at
+        command.CommandText = $"""
+            SELECT {SelectColumns}
             FROM posts
             WHERE id = @id
             """;
@@ -99,12 +125,13 @@ public class SqlitePostRepository(SqliteConnection connection) : IPostRepository
     {
         using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO posts (id, title, content, author, created_at, updated_at, is_published, published_at)
-            VALUES (@id, @title, @content, @author, @createdAt, @updatedAt, @isPublished, @publishedAt)
+            INSERT INTO posts (id, title, content, author, author_id, created_at, updated_at, is_published, published_at)
+            VALUES (@id, @title, @content, @author, @authorId, @createdAt, @updatedAt, @isPublished, @publishedAt)
             ON CONFLICT(id) DO UPDATE SET
                 title = @title,
                 content = @content,
                 author = @author,
+                author_id = @authorId,
                 created_at = @createdAt,
                 updated_at = @updatedAt,
                 is_published = @isPublished,
@@ -114,6 +141,7 @@ public class SqlitePostRepository(SqliteConnection connection) : IPostRepository
         command.Parameters.AddWithValue("@title", post.Title);
         command.Parameters.AddWithValue("@content", post.Content);
         command.Parameters.AddWithValue("@author", post.Author);
+        command.Parameters.AddWithValue("@authorId", post.AuthorId.ToString());
         command.Parameters.AddWithValue("@createdAt", post.CreatedAt.ToString("O"));
         command.Parameters.AddWithValue("@updatedAt", post.UpdatedAt.HasValue ? post.UpdatedAt.Value.ToString("O") : DBNull.Value);
         command.Parameters.AddWithValue("@isPublished", post.IsPublished ? 1 : 0);
@@ -128,14 +156,15 @@ public class SqlitePostRepository(SqliteConnection connection) : IPostRepository
         Title = reader.GetString(1),
         Content = reader.GetString(2),
         Author = reader.GetString(3),
-        CreatedAt = DateTime.Parse(reader.GetString(4), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-        UpdatedAt = reader.IsDBNull(5)
+        AuthorId = reader.IsDBNull(4) ? Guid.Empty : Guid.ParseExact(reader.GetString(4), "D"),
+        CreatedAt = DateTime.Parse(reader.GetString(5), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+        UpdatedAt = reader.IsDBNull(6)
             ? null
-            : DateTime.Parse(reader.GetString(5), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-        IsPublished = reader.GetInt64(6) == 1,
-        PublishedAt = reader.IsDBNull(7)
+            : DateTime.Parse(reader.GetString(6), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+        IsPublished = reader.GetInt64(7) == 1,
+        PublishedAt = reader.IsDBNull(8)
             ? null
-            : DateTime.Parse(reader.GetString(7), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
+            : DateTime.Parse(reader.GetString(8), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
     };
 
     private void EnsureInitialized()
@@ -167,6 +196,9 @@ public class SqlitePostRepository(SqliteConnection connection) : IPostRepository
 
         AddColumnIfMissing("is_published", "INTEGER NOT NULL DEFAULT 0");
         AddColumnIfMissing("published_at", "TEXT");
+        AddColumnIfMissing("author_id", "TEXT");
+
+        var defaultAdminId = userRepository.GetDefaultAdmin().Id;
 
         using var countCommand = connection.CreateCommand();
         countCommand.CommandText = "SELECT COUNT(*) FROM posts";
@@ -176,8 +208,16 @@ public class SqlitePostRepository(SqliteConnection connection) : IPostRepository
         {
             foreach (var post in SeedData.Posts)
             {
+                post.AuthorId = defaultAdminId;
                 ExecuteUpsert(post);
             }
+        }
+        else
+        {
+            using var backfillCommand = connection.CreateCommand();
+            backfillCommand.CommandText = "UPDATE posts SET author_id = @authorId WHERE author_id IS NULL OR author_id = ''";
+            backfillCommand.Parameters.AddWithValue("@authorId", defaultAdminId.ToString());
+            backfillCommand.ExecuteNonQuery();
         }
 
         _initialized = true;

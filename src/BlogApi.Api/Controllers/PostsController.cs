@@ -1,12 +1,11 @@
 using BlogApi.Application.Dtos;
 using BlogApi.Application.Interfaces;
-using BlogApi.Api.Auth;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlogApi.Api.Controllers;
 
 [ApiController]
-[Route("api/posts")]
+[Route("api/v1/posts")]
 public class PostsController(IPostService postService) : ControllerBase
 {
     [HttpGet]
