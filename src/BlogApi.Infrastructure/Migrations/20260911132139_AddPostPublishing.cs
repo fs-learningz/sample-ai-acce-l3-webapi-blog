@@ -23,6 +23,13 @@ namespace BlogApi.Infrastructure.Migrations
                 table: "posts",
                 type: "TEXT",
                 nullable: true);
+
+            migrationBuilder.UpdateData(
+                table: "posts",
+                keyColumn: "Id",
+                keyValue: new Guid("3d2f1a4e-6b8c-4e2a-9f0d-1a2b3c4d5e6f"),
+                columns: new[] { "IsPublished", "PublishedAt" },
+                values: new object[] { true, new DateTime(2026, 8, 17, 0, 0, 0, DateTimeKind.Utc) });
         }
 
         /// <inheritdoc />
