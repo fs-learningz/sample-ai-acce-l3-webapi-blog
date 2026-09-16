@@ -5,15 +5,12 @@ public record PostDto(
     string Title,
     string Content,
     string Author,
+    Guid AuthorId,
     DateTime CreatedAt,
     DateTime? UpdatedAt,
     bool IsPublished,
     DateTime? PublishedAt);
 
-public record CreatePostRequest(string Title, string Content, string Author);
+public record CreatePostRequest(string Title, string Content);
 
 public record UpdatePostRequest(string Title, string Content);
-
-public record LoginRequest(string Username, string Password);
-
-public record LoginResponse(string Token, string Username);
