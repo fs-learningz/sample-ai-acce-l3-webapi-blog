@@ -246,6 +246,70 @@ public class SqlitePostRepository(SqliteConnection connection, IUserRepository u
         [
             new Post
             {
+                Id = Guid.Parse("a1ec4b38-27fa-4475-9f37-20a9d008337a"),
+                Title = "What's New in .NET 11",
+                Content = """
+                    .NET 11 is officially available, and it brings meaningful improvements across the runtime, libraries, SDK, C# language, EF Core, and the extensions ecosystem. Here's a tour of the highlights every .NET developer should know about.
+
+                    RUNTIME
+
+                    Runtime-native async ("Runtime Async") is the headline runtime feature. It no longer requires <EnablePreviewFeatures>true</EnablePreviewFeatures> for projects targeting net11.0, and the runtime libraries themselves are now compiled with runtime-async on. The result is cleaner stack traces, lower overhead, and a batch of performance wins: JIT-compiled runtime-async versions of synchronous task-returning methods, async continuations that skip ExecutionContext capture when there's no ambient state, tail-merged suspension points that shrink generated code, tiered compilation for runtime-async, and faster await paths thanks to task/value-task factory intrinsics and implicit tailcall improvements.
+
+                    The JIT picked up bounds check elimination, redundant checked-context removal, devirtualization, switch expression folding, constant-folding for SequenceEqual, and redundant branch elimination, plus new Arm SVE2 intrinsics, better hardware-intrinsic cost modeling, and a single-instruction Math.BigMul on x64. NativeAOT gets faster interface dispatch through a shared dispatch helper, shrinking binaries and speeding up interface-heavy code. There's also in-process crash report logging that captures managed stack traces before the process exits (now on mobile too), new SIMD lane construction/composition APIs across the Vector<T> family, hardware FP16 instructions for Half, and AVX-VNNI-512 intrinsics. Minimum hardware requirements for x86/x64 and Arm64 were raised to unlock more modern instruction sets.
+
+                    LIBRARIES
+
+                    BCL updates are wide-ranging this release:
+                    - Process gets run-and-capture helpers, fire-and-forget launches, SafeProcessHandle lifecycle methods, StartSuspended, TryGetProcessById, and Signal(PosixSignal) with ProcessExitStatus.
+                    - New numeric types: IEEE 754 decimal floating point (Decimal32, Decimal64, Decimal128), generic Complex<T>, and INumberBase<TSelf>.TryParsePartial for delimiter-aware parsing.
+                    - System.Text.Json adds generic type info retrieval, JsonNamingPolicy.PascalCase, per-member naming overrides, F# discriminated union support, Utf8JsonWriter.Reset, NDJSON-style SerializeAsyncEnumerable overloads, and converters for BFloat16 and the new decimal types.
+                    - Compression gets Zstandard support in System.IO.Compression, improved Base64 APIs, CRC32 validation on ZIP entries, and a Reset() method on the streamless codecs.
+                    - LINQ adds FullJoin plus tuple-returning Join/GroupJoin overloads across Enumerable, Queryable, and AsyncEnumerable.
+                    - Four new zero-copy Stream types (ReadOnlyMemoryStream, WritableMemoryStream, ReadOnlySequenceStream, StringStream), an EqualityComparer<T>.Create factory, generic Random.NextInteger<T>/NextBinaryFloat<T>, and BitArray span constructors round out the collections and primitives story.
+                    - Networking gains typed DNS resolution via a new DnsResolver class, HTTP request-body compression wrappers, configurable connection eviction, QuicStream.Priority for HTTP/3, and TLS hardening including an experimental caller-driven session API.
+                    - Discriminated-union scaffolding (UnionAttribute, IUnion) lands in System.Runtime.CompilerServices to back the new C# union types, and MemoryCache now emits built-in OpenTelemetry metrics.
+
+                    SDK
+
+                    The SDK is leaner and smarter: assembly deduplication shrinks Linux/macOS installers, the CA1873 analyzer got quieter and clearer, and dotnet sln can now create and edit solution filters (.slnf). File-based apps gain #:include for splitting a single-file app across multiple files (plus compiled DLL references, NativeAOT build-output reuse, and dotnet format support), and dotnet run picks up a -e flag for passing environment variables straight from the command line.
+
+                    dotnet watch now integrates with the Aspire app host, recovers automatically from crashes, and supports device selection for MAUI/mobile. CLI telemetry moved from Application Insights to OpenTelemetry. A NativeAOT CLI entry point now serves the full command surface out-of-process, and both the NativeAOT CLI and the MSBuild server are enabled by default. dotnet test picked up a long list of improvements, including --no-dependencies, --use-current-runtime, --timeout, --maximum-failed-tests, live in-flight test display, mobile test project support for Android/iOS/macOS/Mac Catalyst, and xUnit v3/NUnit template support. Container publishing now supports multi-architecture builds with Podman, prefers native local runtimes, and produces reproducible image digests.
+
+                    C# 15
+
+                    C# 15 is the default language version for net11.0 projects and introduces:
+                    - Collection expression arguments: pass constructor or factory arguments, such as capacity or a comparer, via a with(...) element, e.g. [with(capacity: 10), .. values].
+                    - Union types: a new union keyword defines a value that is one of several case types, with implicit conversions and compiler-checked exhaustive switches.
+                    - Closed hierarchies: the closed modifier fixes a class's direct descendants at compile time within the declaring assembly, enabling exhaustive switches without a default arm.
+                    - Extension indexers: declare indexers inside extension blocks so you can index into a type as if the indexer were a native member.
+                    - Labeled break and continue: break and continue can now name an enclosing loop or switch label, replacing boolean-flag and goto workarounds in nested loops.
+                    - Memory safety: the first step of a multi-release effort that ties "unsafe" to the operations that actually touch unmanaged memory. Declaring pointers, taking addresses, fixed, stackalloc-to-pointer conversion, and sizeof no longer require an unsafe context under the preview language version, though dereferencing still does.
+
+                    EF CORE 11
+
+                    EF Core 11 requires the .NET 11 SDK and runtime, and brings:
+                    - Complex types and JSON columns now work with TPT/TPC inheritance, plus lambda-chained configuration such as .Property(e => e.Details.Description), and keys/indexes on nested complex-type properties.
+                    - Better SQL for to-one includes: split queries no longer add unnecessary joins, and redundant ORDER BY keys from reference navigations are pruned, with benchmarks showing 22-29% query improvements.
+                    - GroupBy translation and materialization improvements, a new FullJoin LINQ translation, automatic stripping of no-op CASTs, MaxBy/MinBy translation, and EF.Functions.JsonPathExists().
+                    - SQL Server gets VECTOR_SEARCH() with approximate nearest-neighbor search over vector indexes, vector properties excluded from SELECT by default (up to roughly 9x faster locally and 22x over the network), full-text catalog and index creation via migrations, FREETEXTTABLE/CONTAINSTABLE support, JSON_CONTAINS translation, JSON indexes, and CLR-mapped temporal period properties.
+                    - Cosmos DB adds full complex type support, richer indexing policy configuration, transactional batches by default, bulk execution, session token management, and a System.Text.Json-based serializer that replaces Newtonsoft.Json.
+                    - Migrations get excludable foreign key constraints, a recorded "latest migration" ID in the model snapshot to catch merge conflicts, dotnet ef database update --add to scaffold and apply a migration in one step, offline migration removal, a .config/dotnet-ef.json configuration file, and wildcard (--context "*") support across multiple DbContexts.
+
+                    EXTENSIONS
+
+                    The Microsoft.Extensions ecosystem keeps pace with the platform's AI-first direction. Microsoft.Extensions.AI adds experimental routing primitives, an abstract RoutingChatClient with a concrete SemanticRoutingChatClient, plus an abstract FailoverChatClient and its OrderedFailoverChatClient implementation, making multi-model and multi-endpoint setups easier without hand-rolled retry logic. Resilience and diagnostics packages continue to mature alongside them, and Microsoft.Extensions.Diagnostics now supports declarative Activity tracing configuration via rules, so you can control what gets traced without wiring up an ActivityListener by hand.
+
+                    WRAPPING UP
+
+                    Between runtime-native async, a leaner and AOT-friendlier SDK, expressive new C# 15 syntax, faster EF Core queries with first-class vector and JSON search, and an increasingly AI-aware extensions ecosystem, .NET 11 is a substantial release. General availability lands in November 2026, so grab the SDK and give it a try.
+                    """,
+                Author = "admin",
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                IsPublished = true,
+                PublishedAt = DateTime.UtcNow.AddDays(-10)
+            },
+            new Post
+            {
                 Id = Guid.Parse("0f8fad5b-d9cb-469f-a165-70867728950e"),
                 Title = "Getting Started with Clean Architecture",
                 Content = "Clean architecture separates concerns into domain, application, infrastructure, and presentation layers.",
